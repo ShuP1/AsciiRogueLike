@@ -2,7 +2,7 @@
 
 namespace AsciiRogueLike
 {
-    class DrawTile
+    internal class DrawTile
     {
         public static void Grid(int X, int Y)
         {

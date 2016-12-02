@@ -1,45 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AsciiRogueLike
 {
-    class Program
+    internal class Program
     {
-        private static int[,] map = new int[10,10]{
-            {1,1,1,1,2,1,1,1,1,1},
-            {0,0,0,2,2,0,0,0,0,1},
-            {1,0,0,2,1,2,0,0,0,0},
-            {0,0,2,1,1,2,0,0,0,1},
-            {1,0,0,1,1,1,0,0,0,0},
-            {0,0,0,1,1,0,0,0,0,1},
-            {1,0,0,0,1,0,0,0,0,0},
-            {0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0},
-            {1,1,1,1,1,1,1,1,1,1}
+        private static int[,] map = new int[10, 10]{    //Game Map
+            {0,0,0,0,2,0,0,0,0,0},
+             {0,0,0,2,2,0,0,0,0,0},
+            {0,0,0,2,1,2,0,0,0,0},
+             {0,0,2,1,1,2,0,0,0,0},
+            {0,0,0,1,1,1,0,0,0,0},
+             {0,0,0,1,1,0,0,0,0,0},
+            {0,0,0,1,1,1,0,0,0,0},
+             {0,0,1,0,0,1,0,0,0,0},
+            {0,0,0,1,1,1,0,0,0,0},
+             {0,0,0,1,1,0,0,0,0,0}
             };
 
-        private static int playerX = 4;
-        private static int playerY = 4;
-        private static int playerLive = 1;
+        private static Player player = new Player(4, 4, 1); //Player struct (X, Y, Live)
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
+            //Init
             Console.Title = "Ascii RogueLike";
             Draw.SetSize(105, 33);
-            while (playerLive > 0)
+
+            //Game
+            while (player.Live > 0)
             {
                 Draw.Begin(ConsoleColor.Black);
-                for (int y = 0; y < 10; y++)
+                for (int y = 0; y < 10; y++)    //Draw map
                 {
                     for (int x = 0; x < 10; x++)
                     {
-                        DrawPos(x, y);   
+                        DrawPos(x, y);
                     }
                 }
-                DrawPlayer(playerX, playerY);
+                DrawPlayer(player.X, player.Y); //Draw player
                 Draw.End();
                 bool redraw = false;
                 while (!redraw)
@@ -47,50 +44,53 @@ namespace AsciiRogueLike
                     ConsoleKeyInfo key = Console.ReadKey(true);
                     switch (key.Key)
                     {
-                        case ConsoleKey.UpArrow:
+                        case ConsoleKey.UpArrow: //Player move
                         case ConsoleKey.DownArrow:
                         case ConsoleKey.LeftArrow:
                         case ConsoleKey.RightArrow:
-                            int newX = MoveX(key.Key, playerX, playerY);
-                            int newY = MoveY(key.Key, playerY);
+                            int newX = MoveX(key.Key, player.X, player.Y);
+                            int newY = MoveY(key.Key, player.Y);
                             if (newX < 0 || newY < 0 || newX >= 10 || newY >= 10)
                                 break;
 
                             if (map[newY, newX] != 1)
                                 break;
 
-                            DrawPos(playerX, playerY, false);
+                            DrawPos(player.X, player.Y, false);
                             DrawPlayer(newX, newY);
 
-                            playerX = newX;
-                            playerY = newY;
-
-                            //redraw = true;
+                            player.X = newX;
+                            player.Y = newY;
                             break;
 
-                        case ConsoleKey.Escape:
-                            playerLive--;
+                        case ConsoleKey.Escape: //Exit
+                            player.Live--;
+                            redraw = true;
                             break;
                     }
                 }
             }
         }
 
-        static void DrawPos(int X, int Y, bool grid = true)
+        /// <summary>
+        /// Draw Tile at specific X and Y
+        /// </summary>
+        /// <param name="grid">Draw grid arond tile</param>
+        private static void DrawPos(int X, int Y, bool grid = true)
         {
             int x = IsoX(X, Y);
             int y = IsoY(Y);
             switch (map[Y, X])
             {
                 case 1:
-                    if(grid)
+                    if (grid)
                         DrawTile.Grid(x, y);
 
                     DrawTile.Ground(x, y);
                     break;
 
                 case 2:
-                    if(grid)
+                    if (grid)
                         DrawTile.Grid(x, y);
 
                     DrawTile.Wall(x, y);
@@ -98,22 +98,34 @@ namespace AsciiRogueLike
             }
         }
 
-        static void DrawPlayer(int X, int Y)
+        private static void DrawPlayer(int X, int Y)
         {
-            DrawTile.Ground(IsoX(X, Y), IsoY(Y), ConsoleColor.Red);
+            DrawTile.Ground(IsoX(X, Y), IsoY(Y), ConsoleColor.Red); //TODO better player
         }
 
-        static int IsoX(int X, int Y)
+        /// <summary>
+        /// Convert Map position to Screen positon
+        /// </summary>
+        private static int IsoX(int X, int Y)
         {
             return X * 10 + (Y % 2 == 0 ? 0 : 5);
         }
-        
-        static int IsoY(int Y)
+
+        /// <summary>
+        /// Convert Map position to Screen positon
+        /// </summary>
+        private static int IsoY(int Y)
         {
             return Y * 3;
         }
 
-        static int MoveX(ConsoleKey K, int X, int Y)
+        /// <summary>
+        /// Execute ConsoleKey on X axis
+        /// </summary>
+        /// <param name="X">Actual player X</param>
+        /// <param name="Y">Actual player Y</param>
+        /// <returns>New player X</returns>
+        private static int MoveX(ConsoleKey K, int X, int Y)
         {
             int newX = X;
             switch (K)
@@ -133,7 +145,12 @@ namespace AsciiRogueLike
             return newX;
         }
 
-        static int MoveY(ConsoleKey K, int Y)
+        /// <summary>
+        /// Execute ConsoleKey on Y axis
+        /// </summary>
+        /// <param name="Y">Actual player Y</param>
+        /// <returns>New player Y</returns>
+        private static int MoveY(ConsoleKey K, int Y)
         {
             int newY = Y;
             switch (K)
@@ -149,6 +166,20 @@ namespace AsciiRogueLike
                     break;
             }
             return newY;
+        }
+
+        private struct Player
+        {
+            public int X; //Position on map
+            public int Y;
+            public int Live;
+
+            public Player(int x, int y, int l)
+            {
+                X = x;
+                Y = y;
+                Live = l;
+            }
         }
     }
 }
